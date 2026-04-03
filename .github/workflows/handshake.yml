@@ -1,24 +1,24 @@
 name: Yelan Handshake
 
 on:
-  workflow_dispatch: # Memungkinkan kamu klik 'Run' manual dari HP
+  workflow_dispatch:
 
 jobs:
   test_connection:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Update ke v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Update ke v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install Dependencies
         run: pip install PyGithub
 
       - name: Run Handshake
         env:
-          YELAN_PAT: ${{ secrets.YELAN_PAT }} # Memanggil rahasia yang kamu simpan tadi
+          YELAN_PAT: ${{ secrets.YELAN_PAT }}
         run: python yelan_core.py

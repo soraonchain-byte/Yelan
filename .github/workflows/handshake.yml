@@ -6,12 +6,15 @@ on:
 jobs:
   test_connection:
     runs-on: ubuntu-latest
+    env:
+      # Inilah baris 'pemaksa' agar warning hilang
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4 # Update ke v4
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # Update ke v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 

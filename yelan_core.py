@@ -1,41 +1,17 @@
-from github import Github
-import os
-
-class YelanCore:
-    def __init__(self):
-        token = os.getenv('YELAN_PAT')
-        if not token:
-            raise ValueError("[!] Error: YELAN_PAT tidak ditemukan!")
-        self.client = Github(token)
-        self.user = self.client.get_user()
-
-    def create_turborepo(self, repo_name):
-        """Membangun Monorepo dengan struktur The Great Nine"""
+def create_file_in_repo(self, repo_name, file_path, content, message="Update by Yelan"):
+        """Fungsi khusus untuk menyuntikkan script ke file spesifik"""
         try:
-            print(f"[*] Yelan: Membangun fondasi untuk '{repo_name}'...")
-            repo = self.user.create_repo(repo_name, private=True)
-            
-            # Daftar file boilerplate untuk struktur Turbo Repo
-            files_to_create = {
-                "apps/frontend/src/assets/.gitkeep": "Folder Desain Figma Sora",
-                "apps/backend/main.py": "# Backend Engine",
-                "packages/contracts/program.py": "# GenLayer/Solana Scripts",
-                "turbo.json": '{"pipeline": {"build": {"dependsOn": ["^build"]}}}',
-                "README.md": f"# {repo_name}\nCreated by Yelan for Sora Onchain."
-            }
-
-            for path, content in files_to_create.items():
-                repo.create_file(path, f"initial commit: {path}", content)
-            
-            print(f"[+] Sukses! Repositori {repo_name} siap dieksekusi.")
-            print(f"[+] Link: {repo.html_url}")
+            repo = self.user.get_repo(repo_name)
+            try:
+                # Jika file sudah ada, kita update
+                contents = repo.get_contents(file_path)
+                repo.update_file(contents.path, message, content, contents.sha)
+                print(f"[+] File {file_path} berhasil diperbarui!")
+            except:
+                # Jika file belum ada, kita buat baru
+                repo.create_file(file_path, message, content)
+                print(f"[+] File {file_path} berhasil dibuat!")
             return True
         except Exception as e:
-            print(f"[!] Gagal membangun repo: {e}")
+            print(f"[!] Gagal menyuntikkan kode: {e}")
             return False
-
-if __name__ == "__main__":
-    # Logic untuk menerima input dari GitHub Actions
-    target_name = os.getenv('TARGET_REPO_NAME', 'Project-Alpha')
-    yelan = YelanCore()
-    yelan.create_turborepo(target_name)

@@ -1,0 +1,40 @@
+name: Yelan - Inject Code
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        description: 'Nama Repo Tujuan (Misal: Selena-Agent-Solana)'
+        required: true
+      file_path:
+        description: 'Path File (Misal: packages/programs/src/lib.rs)'
+        required: true
+      code_content:
+        description: 'Paste Kode di Sini'
+        required: true
+
+jobs:
+  inject:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout Yelan Core
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: pip install PyGithub
+
+      - name: Execute Injection
+        env:
+          YELAN_PAT: ${{ secrets.YELAN_PAT }}
+          YELAN_MODE: 'INJECT_CODE'
+          TARGET_REPO: ${{ github.event.inputs.target_repo }}
+          FILE_PATH: ${{ github.event.inputs.file_path }}
+          CODE_CONTENT: ${{ github.event.inputs.code_content }}
+        run: python yelan_core.py

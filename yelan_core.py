@@ -3,22 +3,21 @@ from github import Github
 
 class YelanCore:
     def __init__(self):
-        # Ambil token dari brankas rahasia
         token = os.getenv('YELAN_PAT')
         if not token:
-            raise ValueError("[!] Error: YELAN_PAT tidak ditemukan!")
+            raise ValueError("[!] Error: YELAN_PAT missing!")
         self.client = Github(token)
         self.user = self.client.get_user()
 
     def create_turborepo(self, repo_name):
         """Membangun fondasi Monorepo untuk The Great Nine"""
         try:
-            print(f"[*] Yelan: Memulai pembangunan '{repo_name}'...")
+            print(f"[*] Yelan: Attempting to create '{repo_name}'...")
+            # Gunakan try-except spesifik untuk menangkap error perizinan
             repo = self.user.create_repo(repo_name, private=True)
             
-            # Struktur boilerplate awal
             files = {
-                "apps/frontend/src/assets/.gitkeep": "Folder untuk Design Figma Sora",
+                "apps/frontend/src/assets/.gitkeep": "Folder for Sora's Figma Designs",
                 "apps/backend/main.py": "# Backend Engine for Selena",
                 "packages/programs/src/lib.rs": "// Selena Solana Program",
                 "turbo.json": '{"pipeline": {"build": {"dependsOn": ["^build"]}}}',
@@ -28,48 +27,38 @@ class YelanCore:
             for path, content in files.items():
                 repo.create_file(path, f"init: {path}", content)
             
-            print(f"[+] Sukses! Repo {repo_name} sudah lahir.")
+            print(f"[+] SUCCESS: Repo '{repo_name}' is live!")
             return True
         except Exception as e:
-            print(f"[!] Gagal build repo: {e}")
-            return False
+            # Ini akan membuat workflow gagal (Merah) jika repo tidak tercipta
+            print(f"[!] CRITICAL ERROR: {e}")
+            raise e 
 
-    def create_file_in_repo(self, repo_name, file_path, content, message="Update by Yelan"):
-        """Menyuntikkan kode ke file spesifik di repositori tujuan"""
+    def inject_code(self, repo_name, file_path, content):
+        """Menyuntikkan kode ke repo spesifik"""
         try:
-            # Cari repo target berdasarkan nama (misal: Selena-Agent-Solana)
-            # Karena repo mungkin tidak diawali dengan username, kita cari di akun user
             repo = self.client.get_repo(f"{self.user.login}/{repo_name}")
-            
             try:
-                # Cek jika file sudah ada untuk di-update
                 contents = repo.get_contents(file_path)
-                repo.update_file(contents.path, message, content, contents.sha)
-                print(f"[+] File '{file_path}' di '{repo_name}' berhasil diperbarui!")
+                repo.update_file(contents.path, "Update by Yelan", content, contents.sha)
+                print(f"[+] SUCCESS: '{file_path}' updated!")
             except:
-                # Jika file belum ada, buat baru
-                repo.create_file(file_path, message, content)
-                print(f"[+] File '{file_path}' di '{repo_name}' berhasil dibuat!")
+                repo.create_file(file_path, "Created by Yelan", content)
+                print(f"[+] SUCCESS: '{file_path}' created!")
             return True
         except Exception as e:
-            print(f"[!] Gagal menyuntikkan kode: {e}")
-            return False
+            print(f"[!] INJECTION FAILED: {e}")
+            raise e
 
 if __name__ == "__main__":
-    # Inilah otak yang mengatur mode kerja Yelan
     mode = os.getenv('YELAN_MODE', 'CREATE_REPO')
     yelan = YelanCore()
 
     if mode == 'CREATE_REPO':
-        target_name = os.getenv('TARGET_REPO_NAME', 'Project-Alpha')
-        yelan.create_turborepo(target_name)
-    
+        name = os.getenv('TARGET_REPO_NAME', 'New-Project')
+        yelan.create_turborepo(name)
     elif mode == 'INJECT_CODE':
-        target_repo = os.getenv('TARGET_REPO')
-        target_file = os.getenv('FILE_PATH')
+        target = os.getenv('TARGET_REPO')
+        path = os.getenv('FILE_PATH')
         code = os.getenv('CODE_CONTENT')
-        
-        if target_repo and target_file and code:
-            yelan.create_file_in_repo(target_repo, target_file, code)
-        else:
-            print("[!] Parameter INJECT_CODE tidak lengkap.")
+        yelan.inject_code(target, path, code)
